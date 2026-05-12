@@ -157,6 +157,7 @@ ignore = [
 # look like Latin (у/y, с/c, о/o, а/a, ...). Don't trip on them.
 "src/callendulla/bot/handlers/**/*.py" = ["RUF001"]
 "src/callendulla/bot/middleware/**/*.py" = ["RUF001"]
+"src/callendulla/scheduler/tones.py" = ["RUF001"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["callendulla"]
