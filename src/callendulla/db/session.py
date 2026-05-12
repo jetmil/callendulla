@@ -18,6 +18,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from functools import lru_cache
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -55,7 +56,24 @@ def create_engine(dsn: str, *, echo: bool = False) -> AsyncEngine:
             pool_size=10,
             max_overflow=10,
         )
-    return create_async_engine(dsn, **kwargs)
+    engine = create_async_engine(dsn, **kwargs)
+    if dsn.startswith("sqlite"):
+        # SQLite ignores FK CASCADE unless ``PRAGMA foreign_keys=ON``
+        # is set on every connection. Postgres enforces them by default.
+        # Tests rely on cascade for /forget — wire the pragma here so
+        # SQLite tests match prod behaviour.
+        _attach_sqlite_fk_pragma(engine)
+    return engine
+
+
+def _attach_sqlite_fk_pragma(engine: AsyncEngine) -> None:
+    @event.listens_for(engine.sync_engine, "connect")
+    def _set_pragma(dbapi_connection: object, _: object) -> None:
+        cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
+        try:
+            cursor.execute("PRAGMA foreign_keys = ON")
+        finally:
+            cursor.close()
 
 
 def create_session_factory(engine: AsyncEngine) -> SessionFactory:
