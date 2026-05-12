@@ -62,10 +62,13 @@ class _MessageSender(Protocol):
     """The shape we need out of an aiogram :class:`Bot` (or test stub).
 
     Only ``send_message`` is exercised here — keeping the contract this
-    narrow lets the test stub stay 5 lines.
+    narrow lets the test stub stay 5 lines. ``reply_markup`` carries
+    the nudge keyboard; tests verify it is passed.
     """
 
-    async def send_message(self, *, chat_id: int, text: str, **kwargs: object) -> object: ...
+    async def send_message(
+        self, *, chat_id: int, text: str, reply_markup: object = ..., **kwargs: object
+    ) -> object: ...
 
 
 class NudgeEngine:
@@ -166,29 +169,41 @@ class NudgeEngine:
                 await session.commit()
                 return
 
-        # ── 3) Compose and send ──────────────────────────────────
+        # ── 3) Compose, persist, send ────────────────────────────
+        # Order matters: create the NudgeLog first so we have its id
+        # to embed in the inline-keyboard callback data. Without the
+        # id baked into callback_data, the reaction handler cannot
+        # find which nudge the user replied to.
         text = await self._compose_message(user, event, trigger)
-        tg_message_id: int | None = None
-        try:
-            sent = await self._bot.send_message(chat_id=user.tg_id, text=text)
-            tg_message_id = getattr(sent, "message_id", None)
-        except Exception:
-            # Best-effort: log + record. Don't blow up the loop, the
-            # next tick will retry or escalate as usual.
-            logger.exception(
-                "trigger {trigger_id}: send_message failed, logging anyway",
-                trigger_id=trigger.id,
-            )
-
         log = NudgeLog(
             trigger_id=trigger.id,
             fired_at=now,
             tone_used=trigger.current_tone,
             voice_profile_used=user.voice_profile,
             message_text=text,
-            tg_message_id=tg_message_id,
         )
         session.add(log)
+        await session.flush()  # populate log.id
+
+        # Lazy import — keyboards live in the bot package, and we want
+        # to keep the scheduler module importable in tests that don't
+        # need aiogram.
+        from callendulla.bot.keyboards import nudge_keyboard  # noqa: PLC0415
+
+        keyboard = nudge_keyboard(log.id)
+
+        try:
+            sent = await self._bot.send_message(
+                chat_id=user.tg_id, text=text, reply_markup=keyboard
+            )
+            log.tg_message_id = getattr(sent, "message_id", None)
+        except Exception:
+            # Best-effort: log already written. Next tick will retry or
+            # escalate as usual.
+            logger.exception(
+                "trigger {trigger_id}: send_message failed, log kept",
+                trigger_id=trigger.id,
+            )
 
         # ── 4) Schedule the next fire ────────────────────────────
         trigger.iteration_count += 1
