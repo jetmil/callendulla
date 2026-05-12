@@ -1,0 +1,14 @@
+Alembic migrations for Callendulla.
+
+Run upgrades:
+    alembic upgrade head
+
+Generate a new revision after editing models:
+    alembic revision --autogenerate -m "short summary"
+
+The deploy/entrypoint.sh wrapper runs `alembic upgrade head` once before
+starting supervisord, so manual invocation is only needed during dev.
+
+Migration DSN is taken from Settings.db_dsn_sync (default driver psycopg2)
+— async drivers don't work in Alembic. To override for ad-hoc runs:
+    ALEMBIC_DB_URL=postgresql+psycopg2://... alembic upgrade head
