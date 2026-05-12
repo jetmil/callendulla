@@ -12,8 +12,8 @@ from __future__ import annotations
 from aiogram import Router, types
 from aiogram.filters import Command
 
-from callendulla.api.version import build_date, commit_sha, package_version
 from callendulla.config import Settings
+from callendulla.core.version import build_date, commit_sha, package_version
 
 router = Router(name="source")
 

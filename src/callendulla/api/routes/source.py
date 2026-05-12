@@ -15,8 +15,8 @@ from typing import Final
 from fastapi import APIRouter
 from pydantic import BaseModel, HttpUrl
 
-from callendulla.api.version import build_date, commit_sha, package_version
 from callendulla.config import get_settings
+from callendulla.core.version import build_date, commit_sha, package_version
 
 router = APIRouter(tags=["meta"])
 
