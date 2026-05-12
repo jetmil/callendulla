@@ -32,7 +32,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from callendulla._version import __version__
 from callendulla.api.middleware.agpl_source import AGPLSourceHeaderMiddleware
-from callendulla.api.routes import health, source
+from callendulla.api.routes import health, ical, source
 from callendulla.api.webhook import build_webhook_router
 from callendulla.bot import create_bot, create_dispatcher
 from callendulla.config import BotMode, get_settings
@@ -148,6 +148,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Routers — order is irrelevant for routing, only for OpenAPI grouping.
     app.include_router(health.router)
     app.include_router(source.router)
+    app.include_router(ical.router)
 
     if (
         settings.bot_mode is BotMode.WEBHOOK
