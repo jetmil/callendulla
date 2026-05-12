@@ -14,7 +14,9 @@ Middleware stack (outermost → innermost):
    injection. Configured from ``Settings.allowed_hosts``.
 2. ``CORSMiddleware`` — closed by default, opened only for
    ``Settings.cors_origins``.
-3. ``AGPLSourceHeaderMiddleware`` — injects ``X-Source-URL`` into
+3. ``RateLimitMiddleware`` — per-IP sliding window on ``/ical/`` paths.
+   Operators can disable it via ``ICAL_RATE_LIMIT_PER_IP_HOURLY=0``.
+4. ``AGPLSourceHeaderMiddleware`` — injects ``X-Source-URL`` into
    every response. Must run innermost so its header survives any
    future response-rewriting middleware (e.g. compression).
 """
@@ -32,10 +34,12 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from callendulla._version import __version__
 from callendulla.api.middleware.agpl_source import AGPLSourceHeaderMiddleware
+from callendulla.api.middleware.rate_limit import RateLimitMiddleware
 from callendulla.api.routes import health, ical, source
 from callendulla.api.webhook import build_webhook_router
 from callendulla.bot import create_bot, create_dispatcher
 from callendulla.config import BotMode, get_settings
+from callendulla.core.rate_limit import RateLimiter
 from callendulla.core.safelog import install_loguru_redactor
 
 if TYPE_CHECKING:
@@ -139,7 +143,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 3. AGPL §13 X-Source-URL on every response.
+    # 3. Per-IP rate-limit on /ical/. Activated only if the operator
+    # configured a positive limit; we still build the Redis client so
+    # tests can swap it. The async client is created lazily — module
+    # import is fine without a reachable Redis.
+    if settings.ical_rate_limit_per_ip_hourly > 0:
+        from redis.asyncio import Redis as _AsyncRedis  # noqa: PLC0415
+
+        redis_client = _AsyncRedis.from_url(settings.redis_url, decode_responses=False)
+        app.add_middleware(
+            RateLimitMiddleware,
+            limiter=RateLimiter(redis_client),
+            ical_per_ip_hourly=settings.ical_rate_limit_per_ip_hourly,
+        )
+
+    # 4. AGPL §13 X-Source-URL on every response.
     app.add_middleware(
         AGPLSourceHeaderMiddleware,
         source_url=str(settings.agpl_source_url),

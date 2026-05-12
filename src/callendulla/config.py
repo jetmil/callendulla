@@ -171,6 +171,15 @@ class Settings(BaseSettings):
     whitelist_tg_usernames: Annotated[list[str], NoDecode, Field(default_factory=list)]
     max_events_per_user: int = Field(default=500, ge=1)
     registration_rate_per_ip_hourly: int = Field(default=10, ge=0)
+    ical_rate_limit_per_ip_hourly: int = Field(
+        default=60,
+        ge=0,
+        description=(
+            "Sliding-window per-IP limit on /ical/{token} (anti-scraping). "
+            "Calendar clients refetch every 5-60 min, 60 hits/h tolerates "
+            "even aggressive subscribers. 0 disables the limit."
+        ),
+    )
 
     # ─── Validators ────────────────────────────────────────────
     @field_validator("allowed_hosts", "cors_origins", "whitelist_tg_usernames", mode="before")
