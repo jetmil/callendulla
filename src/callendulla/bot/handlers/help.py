@@ -19,12 +19,14 @@ _HELP_TEXT = (
     "• <code>/add Название ; ГГГГ-ММ-ДД ЧЧ:ММ</code> — создать\n"
     "• <code>/list</code> — ближайшие события\n"
     "• <code>/delete &lt;id&gt;</code> — удалить по id из /list\n\n"
+    "<b>Календарная подписка:</b>\n"
+    "• <code>/ical</code> — URL для Google / Apple / Outlook\n"
+    "• <code>/rotate_ical</code> — сменить токен подписки\n\n"
     "<b>Общее:</b>\n"
     "• <code>/start</code> — приветствие, проверка регистрации\n"
     "• <code>/source</code> — открытый исходник, версия, коммит\n"
     "• <code>/help</code> — эта справка\n\n"
-    "<b>Скоро:</b> напоминания с эскалацией тона, голосовой дневник, "
-    "выбор характера, iCal-фид.\n\n"
+    "<b>Скоро:</b> голосовой дневник, выбор характера, профиля речи.\n\n"
     "Документация: https://github.com/jetmil/callendulla"
 )
 
