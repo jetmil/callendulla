@@ -40,6 +40,8 @@ from callendulla.db.models import (
     TriggerState,
     User,
 )
+from callendulla.llm.base import LLMError, LLMProvider
+from callendulla.llm.prompt import compose_nudge_prompt
 from callendulla.scheduler.quiet_hours import is_quiet_now, next_post_quiet
 from callendulla.scheduler.tones import (
     CAP_ITERATIONS_WITHOUT_REACTION,
@@ -69,9 +71,18 @@ class _MessageSender(Protocol):
 class NudgeEngine:
     """Stateful container so ``run_once`` can be invoked from a job loop."""
 
-    def __init__(self, session_factory: SessionFactory, bot: _MessageSender) -> None:
+    def __init__(
+        self,
+        session_factory: SessionFactory,
+        bot: _MessageSender,
+        llm: LLMProvider | None = None,
+    ) -> None:
         self._session_factory = session_factory
         self._bot = bot
+        # When ``llm is None`` the engine uses the static template bank
+        # for every nudge. Operators who don't set LLM_API_KEY or pick
+        # an unreachable Ollama still get something usable.
+        self._llm = llm
 
     async def run_once(self, *, now_utc: datetime | None = None) -> int:
         """Process every trigger whose ``next_fire_at`` is due.
@@ -156,7 +167,7 @@ class NudgeEngine:
                 return
 
         # ── 3) Compose and send ──────────────────────────────────
-        text = self._compose_message(user, event, trigger)
+        text = await self._compose_message(user, event, trigger)
         tg_message_id: int | None = None
         try:
             sent = await self._bot.send_message(chat_id=user.tg_id, text=text)
@@ -208,9 +219,30 @@ class NudgeEngine:
             return len(logs) if all(log.user_reaction is None for log in logs) else 0
         return sum(1 for log in logs if log.user_reaction is None)
 
-    @staticmethod
-    def _compose_message(user: User, event: Event, trigger: Trigger) -> str:
-        """Render the nudge text. LLM call slots in here later."""
+    async def _compose_message(self, user: User, event: Event, trigger: Trigger) -> str:
+        """Render the nudge text. LLM-first with template fallback.
+
+        If no LLM is wired in (``llm=None``) or any LLMError surfaces,
+        we fall back to the static template bank — the user gets a
+        message regardless of upstream availability. Cross-user safety:
+        the prompt never includes other users' data — see
+        :func:`compose_nudge_prompt`.
+        """
+        if self._llm is not None:
+            prompt = compose_nudge_prompt(
+                profile=user.voice_profile,
+                tone=trigger.current_tone,
+                title=event.title,
+            )
+            try:
+                return await self._llm.generate(prompt)
+            except LLMError as exc:
+                logger.warning(
+                    "trigger {trigger_id}: LLM failed, falling back to template ({reason})",
+                    trigger_id=trigger.id,
+                    reason=str(exc),
+                )
+
         return render_nudge(
             profile=user.voice_profile,
             tone=trigger.current_tone,
