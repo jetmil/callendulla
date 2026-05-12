@@ -39,6 +39,7 @@ from callendulla.api.routes import health, ical, source
 from callendulla.api.webhook import build_webhook_router
 from callendulla.bot import create_bot, create_dispatcher
 from callendulla.config import BotMode, get_settings
+from callendulla.core.observability import init_observability
 from callendulla.core.rate_limit import RateLimiter
 from callendulla.core.safelog import install_loguru_redactor
 
@@ -61,7 +62,11 @@ def _make_lifespan(
 
     @asynccontextmanager
     async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        # Redact MUST be installed before Sentry attaches to loguru —
+        # otherwise the first half-second of logs after restart can
+        # leak tokens to Sentry's collector.
         install_loguru_redactor()
+        init_observability(settings)
         # Trigger eager Settings construction so misconfig surfaces here,
         # not on the first request. ``settings`` is already constructed
         # via the closure, but the cached singleton must be primed too —
