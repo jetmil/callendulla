@@ -1,0 +1,218 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Callendulla — self-hosted Telegram calendar bot with voice diary.
+# Copyright (C) 2026 Darovitsky <jetmil@proton.me>
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "callendulla"
+version = "0.1.0.dev0"
+description = "Self-hosted Telegram calendar bot with escalating reminder tone and voice diary"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+authors = [
+    { name = "Darovitsky", email = "jetmil@proton.me" },
+]
+keywords = [
+    "telegram",
+    "bot",
+    "calendar",
+    "reminders",
+    "scheduler",
+    "voice-diary",
+    "self-host",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: No Input/Output (Daemon)",
+    "Framework :: AsyncIO",
+    "Framework :: FastAPI",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Natural Language :: Russian",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Communications :: Chat",
+    "Topic :: Office/Business :: Scheduling",
+]
+
+# Runtime deps live in requirements.txt to keep `pip install -r` workflow
+# working for self-hosters. Mirrored here only for tooling that reads pyproject.
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.32,<1.0",
+    "pydantic>=2.10,<3.0",
+    "pydantic-settings>=2.7,<3.0",
+    "python-multipart>=0.0.20,<1.0",
+    "sqlalchemy[asyncio]>=2.0.36,<3.0",
+    "asyncpg>=0.30,<1.0",
+    "alembic>=1.14,<2.0",
+    "psycopg2-binary>=2.9.10,<3.0",
+    "aiogram>=3.27,<4.0",
+    "apscheduler>=3.10,<4.0",
+    "python-dateutil>=2.9,<3.0",
+    "croniter>=3.0,<4.0",
+    "icalendar>=6.0,<8.0",
+    "google-genai>=0.3,<2.0",
+    "ollama>=0.4,<1.0",
+    "httpx>=0.27,<0.28",
+    "aiohttp-socks>=0.10,<1.0",
+    "python-dotenv>=1.0,<2.0",
+    "orjson>=3.10,<4.0",
+    "loguru>=0.7,<1.0",
+    "redis>=5.0,<7.0",
+    "cryptography>=43.0,<48.0",
+    "supervisor>=4.2,<5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8,<1.0",
+    "mypy>=1.13,<2.0",
+    "types-python-dateutil",
+    "types-croniter",
+    "pre-commit>=4.0,<5.0",
+]
+test = [
+    "pytest>=8.0,<10.0",
+    "pytest-asyncio>=0.24,<2.0",
+    "pytest-cov>=6.0,<7.0",
+    "testcontainers[postgres,redis]>=4.9,<5.0",
+    "httpx>=0.27,<0.28",
+]
+
+[project.urls]
+Homepage = "https://github.com/jetmil/callendulla"
+Repository = "https://github.com/jetmil/callendulla"
+Issues = "https://github.com/jetmil/callendulla/issues"
+Changelog = "https://github.com/jetmil/callendulla/blob/main/CHANGELOG.md"
+
+# CLI entry-points wired up when src/ runtime lands.
+# [project.scripts]
+# callendulla-api = "callendulla.api.__main__:main"
+# callendulla-bot = "callendulla.bot.__main__:main"
+# callendulla-scheduler = "callendulla.scheduler.__main__:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+# ─── ruff ────────────────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = [
+    "migrations",
+    ".venv",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# Sensible default for a service: pyflakes, pycodestyle, isort, bugbear,
+# comprehensions, pep8-naming, async checks, security (bandit subset), pylint
+# warnings, perf, simplify. Tight enough to catch real bugs without being
+# pedantic about purely cosmetic stuff (D, ANN, COM, FIX).
+select = [
+    "E", "W",       # pycodestyle
+    "F",            # pyflakes
+    "I",            # isort
+    "B",            # flake8-bugbear
+    "C4",           # flake8-comprehensions
+    "N",            # pep8-naming
+    "UP",           # pyupgrade
+    "ASYNC",        # flake8-async
+    "S",            # flake8-bandit (security)
+    "PL",           # pylint
+    "PERF",         # perflint
+    "SIM",          # flake8-simplify
+    "TID",          # tidy imports
+    "RUF",          # ruff-specific
+]
+ignore = [
+    "E501",     # line too long — handled by formatter
+    "S101",     # assert in tests is fine
+    "PLR0913",  # too many args — service handlers naturally have many
+    "PLR2004",  # magic number — too noisy on real code
+    "PLR0915",  # too many statements
+    "PLR0912",  # too many branches
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S", "PLR2004", "ASYNC230"]
+"migrations/**/*.py" = ["N999", "E", "I", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["callendulla"]
+combine-as-imports = true
+
+# ─── mypy ────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_decorators = false  # aiogram/fastapi decorators are untyped
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "supervisor.*",
+    "apscheduler.*",
+    "aiohttp_socks.*",
+    "ollama.*",
+    "testcontainers.*",
+]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# ─── pytest ──────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--showlocals",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: requires real Postgres/Redis via testcontainers",
+    "llm: hits real or replayed LLM provider",
+]
+filterwarnings = [
+    "error",
+    # apscheduler/sqlalchemy deprecation chatter that we can't fix:
+    "ignore::DeprecationWarning:apscheduler.*",
+]
+
+[tool.coverage.run]
+source = ["src/callendulla"]
+branch = true
+omit = [
+    "*/migrations/*",
+    "*/__main__.py",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@overload",
+]

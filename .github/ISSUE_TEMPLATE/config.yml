@@ -1,0 +1,16 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: mailto:jetmil@proton.me
+    about: >-
+      НЕ открывай публичный issue для уязвимостей. Пиши на
+      jetmil@proton.me. См. SECURITY.md.
+  - name: Commercial / closed-source license
+    url: mailto:jetmil@proton.me
+    about: >-
+      Если AGPL-3.0 не подходит твоему сценарию — обсудим коммерческую
+      лицензию.
+  - name: General question / discussion
+    url: https://github.com/jetmil/callendulla/discussions
+    about: >-
+      Не баг и не feature request — открой Discussion вместо Issue.

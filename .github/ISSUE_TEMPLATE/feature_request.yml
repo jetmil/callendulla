@@ -1,0 +1,59 @@
+name: Feature request
+description: Идея фичи, доработки или изменения архитектуры
+title: "[feature] "
+labels: ["enhancement", "triage"]
+assignees: ["jetmil"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Перед открытием issue прочти `CONTRIBUTING.md` секцию «О чём НЕ
+        делать PR (без обсуждения в Issue)». Если твоя идея попадает в
+        список «обсудить заранее» — issue правильное место, спасибо что
+        обсуждаешь до кода.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую проблему решаем
+      description: |
+        Сценарий из жизни. Не «фича X крутая», а «я как self-host'ер хочу
+        делать Y, и сейчас приходится Z».
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Предлагаемое решение
+      description: Как это могло бы выглядеть с точки зрения юзера.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Что я уже пробовал / альтернативы
+      description: Если этой фичи нет — что я делаю вместо? Почему не подходит?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Масштаб изменения
+      options:
+        - "Маленький: правка в одном файле, без миграций"
+        - "Средний: новый endpoint / новая команда бота, миграция БД"
+        - "Большой: новый сервис / новая зависимость / breaking change"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: willingness
+    attributes:
+      label: Готовность контрибьютить
+      options:
+        - label: Я готов открыть PR с этой фичей если идея принята
+        - label: Я готов написать тесты к ней
+        - label: Я хочу обсудить, но реализовывать сам не буду

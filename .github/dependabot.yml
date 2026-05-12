@@ -1,0 +1,39 @@
+version: 2
+updates:
+  # ─── Python deps ──────────────────────────────────────────────
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "python"]
+    groups:
+      # bundle minor/patch updates so PR count stays sane
+      minor-and-patch:
+        update-types: [minor, patch]
+    # Major bumps come as individual PRs to review them deliberately.
+    reviewers: [jetmil]
+
+  # ─── Docker base image ────────────────────────────────────────
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: ["dependencies", "docker"]
+    reviewers: [jetmil]
+
+  # ─── GitHub Actions ───────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: ["dependencies", "ci"]
+    groups:
+      actions:
+        update-types: [minor, patch]
+    reviewers: [jetmil]

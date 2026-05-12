@@ -1,0 +1,81 @@
+# Секреты — никогда в Docker image
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+
+# Юзерские данные хоста
+data/
+volumes/
+postgres-data/
+redis-data/
+backups/
+*.db
+*.sqlite
+*.sqlite3
+
+# Логи
+logs/
+*.log
+
+# Pre-rendered voice банки (большие, тянутся отдельным release artifact)
+voice_banks/
+
+# Git и git-вспомогалки
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Python мусор
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+*.egg-info/
+build/
+dist/
+
+# Venv — в контейнере свой Python
+venv/
+.venv/
+env/
+ENV/
+
+# Docs не нужны в runtime, но README и LICENSE — оставляем:
+# AGPL требует распространять текст лицензии вместе с binary;
+# README полезен для docker inspect / OCI metadata.
+docs/
+*.md
+!README.md
+# LICENSE намеренно НЕ исключён — нужен в image для AGPL compliance
+
+# Docker-meta (циклическая ссылка)
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+.dockerignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Локальный мусор
+*.tmp
+*.bak
+.tmp_*
+tmp/
+.DS_Store
+Thumbs.db

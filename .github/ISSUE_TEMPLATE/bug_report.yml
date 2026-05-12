@@ -1,0 +1,105 @@
+name: Bug report
+description: Что-то сломано, упало или ведёт себя иначе чем в документации
+title: "[bug] "
+labels: ["bug", "triage"]
+assignees: ["jetmil"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо что хочешь помочь починить.
+
+        **Security issue?** НЕ открывай публичный issue. Пиши на
+        `jetmil@proton.me`. Подробности в [SECURITY.md](../blob/main/SECURITY.md).
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Базовые проверки
+      options:
+        - label: Я обновил образ до latest tagged release (или текущего `main`)
+          required: true
+        - label: Я прочитал `docs/install.md` и убедился что .env заполнен корректно
+          required: true
+        - label: Я искал issue с похожей проблемой и не нашёл
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Версия Callendulla
+      description: Тег релиза или commit SHA. Узнать — `docker logs <container> | grep version` или `curl localhost:8290/source`.
+      placeholder: "v0.1.0 или git SHA abc1234"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Хост-окружение
+      description: ОС, версия Docker, архитектура.
+      placeholder: "Ubuntu 24.04 / Docker 27.3.1 / amd64"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: llm-provider
+    attributes:
+      label: LLM-провайдер
+      options:
+        - gemini
+        - openai
+        - anthropic
+        - ollama (локальный)
+        - другой
+        - не использую
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Что произошло
+      description: Краткое описание.
+      placeholder: "Бот не отвечает на /start после регистрации"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Что ожидалось
+      placeholder: "После /start приходит сообщение с inline-меню"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: |
+        1. `docker compose up -d` со свежим .env
+        2. Найти бота в Telegram, написать /start
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи
+      description: |
+        `docker compose logs --tail=200 app` обычно достаточно. **ВНИМАНИЕ:**
+        удали свои токены и ID юзеров до того как вставишь. Token redact в логах
+        callendulla — WIP, до его реализации логи могут содержать секреты.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Что-то ещё
+      description: Hypothesis, попытки фикса, скриншоты, asciinema.
+    validations:
+      required: false

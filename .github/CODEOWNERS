@@ -1,0 +1,19 @@
+# Code owners for callendulla.
+# https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+#
+# These owners get auto-requested for review on every PR.
+# Order matters — last match wins.
+
+# Default: everything goes to @jetmil
+*                       @jetmil
+
+# Security-sensitive areas: same owner, but listing explicitly makes
+# intent clear when more owners join later.
+/SECURITY.md            @jetmil
+/.gitleaks.toml         @jetmil
+/.github/workflows/     @jetmil
+/.pre-commit-config.yaml @jetmil
+/Dockerfile             @jetmil
+/docker-compose.yml     @jetmil
+/deploy/                @jetmil
+/docs/agpl-compliance.md @jetmil
