@@ -15,6 +15,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from callendulla.bot.handlers import (
+    events as events_router,
     help as help_router,
     source as source_router,
     start as start_router,
@@ -59,6 +60,7 @@ def create_dispatcher(
     dp.update.middleware(UserMiddleware(factory, settings))
 
     dp.include_router(start_router.router)
+    dp.include_router(events_router.router)
     dp.include_router(source_router.router)
     dp.include_router(help_router.router)
 
