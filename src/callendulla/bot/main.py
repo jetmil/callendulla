@@ -26,6 +26,7 @@ from callendulla.bot.handlers import (
 from callendulla.bot.middleware.user import UserMiddleware
 from callendulla.config import Settings, get_settings
 from callendulla.db.session import SessionFactory, get_session_factory
+from callendulla.stt import build_stt_provider
 
 
 def create_bot(settings: Settings | None = None) -> Bot:
@@ -56,6 +57,9 @@ def create_dispatcher(
     # them swappable in tests.
     dp["settings"] = settings
     dp["session_factory"] = factory
+    # ``stt`` may be ``None`` — handlers (notably diary) treat that as
+    # "no transcription, audio-only mode".
+    dp["stt"] = build_stt_provider(settings)
 
     # ``UserMiddleware`` runs first on every update — it materialises a
     # :class:`User` row (creating one if absent and allowed) and adds it

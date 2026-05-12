@@ -26,6 +26,7 @@ _HELP_TEXT = (
     "• пришли голосовое — сохраню зашифровано\n"
     "• <code>/diary</code> — список\n"
     "• <code>/diary play &lt;id&gt;</code> — переслать обратно\n"
+    "• <code>/diary transcript &lt;id&gt;</code> — расшифровка\n"
     "• <code>/diary forget &lt;id&gt;</code> — удалить\n\n"
     "<b>Общее:</b>\n"
     "• <code>/start</code> — приветствие, проверка регистрации\n"
