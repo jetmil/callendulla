@@ -90,3 +90,5 @@ docker-compose.override.yml
 *.bak
 .tmp_*
 tmp/
+# pytest's tmp_path_factory occasionally drops symlinks at cwd; never commit.
+pytest-of-*/
