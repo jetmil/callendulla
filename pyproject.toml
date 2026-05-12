@@ -153,6 +153,10 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S", "PLR2004", "ASYNC230"]
 "migrations/**/*.py" = ["N999", "E", "I", "W"]
+# Russian user-facing strings legitimately contain Cyrillic glyphs that
+# look like Latin (у/y, с/c, о/o, а/a, ...). Don't trip on them.
+"src/callendulla/bot/handlers/**/*.py" = ["RUF001"]
+"src/callendulla/bot/middleware/**/*.py" = ["RUF001"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["callendulla"]

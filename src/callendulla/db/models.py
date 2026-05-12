@@ -34,6 +34,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     CheckConstraint,
@@ -138,7 +139,11 @@ class User(TimestampMixin, Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     tg_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True, index=True)
     tg_username: Mapped[str | None] = mapped_column(String(64))
     display_name: Mapped[str | None] = mapped_column(String(120))
@@ -200,7 +205,11 @@ class Event(TimestampMixin, Base):
 
     __tablename__ = "events"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     owner_user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -252,7 +261,11 @@ class Trigger(TimestampMixin, Base):
         Index("ix_trigger_due", "state", "next_fire_at"),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     event_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("events.id", ondelete="CASCADE"),
@@ -322,7 +335,11 @@ class NudgeLog(Base):
     __tablename__ = "nudge_logs"
     __table_args__ = (Index("ix_nudge_log_trigger_fired", "trigger_id", "fired_at"),)
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     trigger_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("triggers.id", ondelete="CASCADE"),
@@ -383,10 +400,20 @@ class NudgeCache(Base):
     __tablename__ = "nudge_cache"
     __table_args__ = (UniqueConstraint("cache_key", name="uq_nudge_cache_key"),)
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     cache_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     response_text: Mapped[str] = mapped_column(Text, nullable=False)
-    response_meta: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False, default=dict)
+    # JSONB on Postgres (prod target), JSON fallback on SQLite for fast
+    # in-memory smoke tests. Mirrored in migrations/versions/.../initial.
+    response_meta: Mapped[dict[str, object]] = mapped_column(
+        JSONB().with_variant(JSON(), "sqlite"),
+        nullable=False,
+        default=dict,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -417,7 +444,11 @@ class VoiceDiary(Base):
     __tablename__ = "voice_diary"
     __table_args__ = (Index("ix_diary_owner_created", "owner_user_id", "created_at"),)
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     owner_user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
