@@ -48,6 +48,11 @@ redis>=5.0,<7.0
 # --- crypto / шифрование дневника at-rest ---
 cryptography>=43.0,<48.0
 
+# --- observability (optional — активируется при SENTRY_DSN) ---
+# Sentry SDK + FastAPI/Loguru/SQLAlchemy интеграции для error tracking
+# и traces. Без DSN — no-op import, ничего не отправляется.
+sentry-sdk[fastapi,loguru,sqlalchemy]>=2.0,<3.0
+
 # --- process management (supervisor запускает api+bot+scheduler в одном образе) ---
 supervisor>=4.2,<5.0
 

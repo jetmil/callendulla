@@ -24,6 +24,7 @@ from loguru import logger
 
 from callendulla.bot import create_bot
 from callendulla.config import Settings, get_settings
+from callendulla.core.observability import init_observability
 from callendulla.core.safelog import install_loguru_redactor
 from callendulla.db.session import SessionFactory, get_session_factory
 from callendulla.llm import build_provider
@@ -57,6 +58,7 @@ def build_scheduler(engine: NudgeEngine) -> AsyncIOScheduler:
 async def _async_run(settings: Settings | None = None) -> None:
     settings = settings or get_settings()
     install_loguru_redactor()
+    init_observability(settings)
 
     bot: Bot = create_bot(settings)
     factory: SessionFactory = get_session_factory()
