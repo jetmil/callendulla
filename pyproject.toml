@@ -59,6 +59,8 @@ dependencies = [
     "croniter>=3.0,<4.0",
     "icalendar>=6.0,<8.0",
     "google-genai>=0.3,<2.0",
+    "openai>=1.0,<3.0",
+    "anthropic>=0.40,<2.0",
     "ollama>=0.4,<1.0",
     "httpx>=0.27,<0.28",
     "aiohttp-socks>=0.10,<1.0",
@@ -158,6 +160,7 @@ ignore = [
 "src/callendulla/bot/handlers/**/*.py" = ["RUF001"]
 "src/callendulla/bot/middleware/**/*.py" = ["RUF001"]
 "src/callendulla/scheduler/tones.py" = ["RUF001"]
+"src/callendulla/llm/prompt.py" = ["RUF001"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["callendulla"]

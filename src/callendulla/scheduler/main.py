@@ -26,6 +26,8 @@ from callendulla.bot import create_bot
 from callendulla.config import Settings, get_settings
 from callendulla.core.safelog import install_loguru_redactor
 from callendulla.db.session import SessionFactory, get_session_factory
+from callendulla.llm import build_provider
+from callendulla.llm.base import LLMProvider
 from callendulla.scheduler.nudge_engine import NudgeEngine
 
 if TYPE_CHECKING:
@@ -58,10 +60,22 @@ async def _async_run(settings: Settings | None = None) -> None:
 
     bot: Bot = create_bot(settings)
     factory: SessionFactory = get_session_factory()
+
+    # BYOK: the provider is wired up here. If the operator's key is
+    # bad / model unreachable, the engine's per-call try/except falls
+    # back to the template bank — boot does not fail.
+    llm: LLMProvider | None
+    try:
+        llm = build_provider(settings)
+        logger.info("LLM provider: {} ({})", settings.llm_provider.value, settings.llm_model)
+    except ValueError as exc:
+        logger.warning("LLM disabled: {} — falling back to template bank", exc)
+        llm = None
+
     # aiogram.Bot.send_message accepts chat_id positionally + many optional
     # kwargs, so it does not match our kwarg-only Protocol on paper —
     # at runtime it satisfies the call site fine.
-    engine = NudgeEngine(factory, bot)  # type: ignore[arg-type]
+    engine = NudgeEngine(factory, bot, llm)  # type: ignore[arg-type]
 
     scheduler = build_scheduler(engine)
     scheduler.start()
