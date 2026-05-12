@@ -90,3 +90,26 @@ def nudge_keyboard(nudge_log_id: int) -> InlineKeyboardMarkup:
         ),
     ]
     return InlineKeyboardMarkup(inline_keyboard=[row1, row2])
+
+
+FORGET_CONFIRM_CALLBACK: Final[str] = "forget:confirm"
+FORGET_CANCEL_CALLBACK: Final[str] = "forget:cancel"
+
+
+def forget_confirm_keyboard() -> InlineKeyboardMarkup:
+    """Two-button confirmation for the destructive ``/forget`` flow.
+
+    No row encodes the user id — :class:`UserMiddleware` already
+    resolves the caller. Same callback for everyone, the handler
+    operates on ``data["user"]``.
+    """
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="❌ Отмена", callback_data=FORGET_CANCEL_CALLBACK),
+                InlineKeyboardButton(
+                    text="🔥 Да, удалить всё", callback_data=FORGET_CONFIRM_CALLBACK
+                ),
+            ]
+        ]
+    )

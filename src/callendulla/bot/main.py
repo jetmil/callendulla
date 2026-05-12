@@ -17,6 +17,7 @@ from aiogram.enums import ParseMode
 from callendulla.bot.handlers import (
     diary as diary_router,
     events as events_router,
+    forget as forget_router,
     help as help_router,
     ical as ical_router,
     reactions as reactions_router,
@@ -70,6 +71,7 @@ def create_dispatcher(
     dp.include_router(events_router.router)
     dp.include_router(ical_router.router)
     dp.include_router(diary_router.router)
+    dp.include_router(forget_router.router)
     dp.include_router(reactions_router.router)
     dp.include_router(source_router.router)
     dp.include_router(help_router.router)
