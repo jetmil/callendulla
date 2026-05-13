@@ -163,3 +163,89 @@ jobs:
         with:
           dockerfile: Dockerfile
           ignore: DL3008,DL3013
+
+  # ─── docker compose smoke ────────────────────────────────────────
+  # Boots the full compose stack with a throwaway .env, waits for the
+  # app container to become healthy, hits /health and /source to
+  # prove the wiring (api + postgres + redis + alembic migration on
+  # entrypoint) actually works together. Catches regressions like
+  # "the image builds but Alembic can't reach postgres" that no unit
+  # test sees.
+  compose-smoke:
+    name: docker compose smoke
+    runs-on: ubuntu-24.04
+    needs: [docker-build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate a throwaway .env
+        run: |
+          cat > .env <<EOF
+          TELEGRAM_BOT_TOKEN=1234567890:CI-SMOKE-FAKE-TOKEN-DO-NOT-USE-AT-ALL
+          OWNER_TG_ID=1
+          BOT_MODE=polling
+          LLM_PROVIDER=ollama
+          LLM_MODEL=stub
+          SECRET_KEY=$(openssl rand -hex 32)
+          DIARY_ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+          POSTGRES_PASSWORD=$(openssl rand -hex 16)
+          DB_DSN=postgresql+asyncpg://callendulla:\${POSTGRES_PASSWORD}@postgres:5432/callendulla
+          DB_DSN_SYNC=postgresql+psycopg2://callendulla:\${POSTGRES_PASSWORD}@postgres:5432/callendulla
+          REDIS_URL=redis://redis:6379/0
+          AGPL_SOURCE_URL=https://github.com/jetmil/callendulla
+          ALLOWED_HOSTS=*
+          ICAL_RATE_LIMIT_PER_IP_HOURLY=0
+          EOF
+          # Expand POSTGRES_PASSWORD inside the DSN values
+          # (the heredoc above writes the literal ${POSTGRES_PASSWORD}).
+          PG_PWD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
+          sed -i "s|\\\${POSTGRES_PASSWORD}|${PG_PWD}|g" .env
+
+      - name: docker compose up -d
+        run: docker compose up -d --build
+
+      - name: Wait for app healthy
+        # Containers boot order: postgres → app (entrypoint runs
+        # alembic upgrade head, then supervisord). HEALTHCHECK in
+        # Dockerfile has start-period=60s; we poll up to 120s.
+        run: |
+          for i in $(seq 1 24); do
+            STATUS=$(docker inspect --format '{{.State.Health.Status}}' \
+              "$(docker compose ps -q app)" 2>/dev/null || echo "starting")
+            echo "attempt $i: $STATUS"
+            if [ "$STATUS" = "healthy" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "app never became healthy"
+          docker compose logs app
+          exit 1
+
+      - name: Hit /health
+        run: |
+          STATUS=$(curl -s -o /tmp/health.json -w '%{http_code}' \
+            http://127.0.0.1:8290/health)
+          test "$STATUS" = "200" || { cat /tmp/health.json; exit 1; }
+          cat /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+
+      - name: Hit /source (AGPL §13 disclosure)
+        run: |
+          STATUS=$(curl -s -o /tmp/source.json -w '%{http_code}' \
+            http://127.0.0.1:8290/source)
+          test "$STATUS" = "200" || { cat /tmp/source.json; exit 1; }
+          cat /tmp/source.json
+          # license must say AGPL
+          grep -q '"license":"AGPL-3.0-or-later"' /tmp/source.json
+          # X-Source-URL header must echo the configured AGPL_SOURCE_URL
+          HEADER=$(curl -s -D - http://127.0.0.1:8290/health -o /dev/null \
+            | grep -i '^x-source-url:' || true)
+          test -n "$HEADER" || { echo "no X-Source-URL header"; exit 1; }
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: docker compose down
+        if: always()
+        run: docker compose down -v
