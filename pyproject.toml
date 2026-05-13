@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "callendulla"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Self-hosted Telegram calendar bot with escalating reminder tone and voice diary"
 readme = "README.md"
 license = { file = "LICENSE" }
