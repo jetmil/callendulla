@@ -21,6 +21,7 @@ from callendulla.bot.handlers import (
     help as help_router,
     ical as ical_router,
     reactions as reactions_router,
+    settings as settings_router,
     source as source_router,
     start as start_router,
 )
@@ -71,6 +72,7 @@ def create_dispatcher(
     dp.include_router(events_router.router)
     dp.include_router(ical_router.router)
     dp.include_router(diary_router.router)
+    dp.include_router(settings_router.router)
     dp.include_router(forget_router.router)
     dp.include_router(reactions_router.router)
     dp.include_router(source_router.router)
