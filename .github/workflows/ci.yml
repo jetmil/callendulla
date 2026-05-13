@@ -65,11 +65,10 @@ jobs:
             echo "src/ not present yet — skipping mypy"
           fi
 
-  # ─── tests ───────────────────────────────────────────────────────
-  test:
-    name: pytest
+  # ─── unit tests (SQLite, fast) ───────────────────────────────────
+  test-unit:
+    name: pytest unit
     runs-on: ubuntu-24.04
-    # Need Postgres+Redis via testcontainers — Docker is available on the runner.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -83,13 +82,49 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,test]"
-      - name: Run pytest
+      - name: Run unit tests
+        # ``--ignore=tests/integration`` keeps the docker-dependent
+        # tests off the unit job; they have their own runner below.
+        # Coverage report stays as artifact for the badge.
         run: |
-          if [ -d tests ] && [ -n "$(find tests -name 'test_*.py' -print -quit)" ]; then
-            pytest --cov=callendulla --cov-report=term-missing
-          else
-            echo "no tests yet — skeleton stage"
-          fi
+          pytest --ignore=tests/integration \
+                 --cov=callendulla --cov-report=term-missing \
+                 --cov-report=xml:coverage.xml
+      - name: Upload coverage XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: ignore
+
+  # ─── integration tests (real Postgres + Redis via testcontainers) ─
+  test-integration:
+    name: pytest integration
+    runs-on: ubuntu-24.04
+    # Docker daemon is present on ubuntu-24.04 runners — testcontainers
+    # uses it directly. We pre-pull the images to keep the per-test
+    # wait predictable.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,test]"
+      - name: Pre-pull container images
+        # Saves ~5s per test session; cheap and removes a flaky vector
+        # (first test paying for image pull vs. its own startup wait).
+        run: |
+          docker pull postgres:16-alpine
+          docker pull redis:7-alpine
+      - name: Run integration tests
+        run: pytest tests/integration -v
 
   # ─── docker build sanity ─────────────────────────────────────────
   docker-build:
