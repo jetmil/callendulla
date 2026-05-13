@@ -53,6 +53,11 @@ cryptography>=43.0,<48.0
 # и traces. Без DSN — no-op import, ничего не отправляется.
 sentry-sdk[fastapi,loguru,sqlalchemy]>=2.0,<3.0
 
+# --- TTS (опционально — активируется при TTS_ENGINE=edge) ---
+# edge-tts — бесплатный Microsoft Azure TTS endpoint, без ключа.
+# Поднимается только когда TTS_ENGINE=edge.
+edge-tts>=6.1,<8.0
+
 # --- process management (supervisor запускает api+bot+scheduler в одном образе) ---
 supervisor>=4.2,<5.0
 
