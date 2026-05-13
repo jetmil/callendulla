@@ -28,12 +28,15 @@ _HELP_TEXT = (
     "• <code>/diary play &lt;id&gt;</code> — переслать обратно\n"
     "• <code>/diary transcript &lt;id&gt;</code> — расшифровка\n"
     "• <code>/diary forget &lt;id&gt;</code> — удалить\n\n"
+    "<b>Настройки:</b>\n"
+    "• <code>/voice &lt;профиль&gt;</code> — характер голоса пинков\n"
+    "• <code>/timezone &lt;Region/City&gt;</code> — твой часовой пояс\n"
+    "• <code>/quiet &lt;from&gt; &lt;to&gt;</code> — окно тишины\n\n"
     "<b>Общее:</b>\n"
     "• <code>/start</code> — приветствие, проверка регистрации\n"
     "• <code>/source</code> — открытый исходник, версия, коммит\n"
     "• <code>/forget</code> — стереть аккаунт со всеми данными\n"
     "• <code>/help</code> — эта справка\n\n"
-    "<b>Скоро:</b> выбор характера, голос профилей.\n\n"
     "Документация: https://github.com/jetmil/callendulla"
 )
 
